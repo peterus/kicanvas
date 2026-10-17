@@ -192,6 +192,10 @@ class KiCanvasEmbedElement extends KCUIElement {
                 controls="${this.controls}"
                 controlslist="${this.controlslist}">
             </kc-schematic-app>` as KCSchematicAppElement;
+            // CopperChat: forward the theme attribute (ignored upstream).
+            if (this.theme) {
+                this.#schematic_app.setAttribute("theme", this.theme);
+            }
         }
 
         if (this.#project.has_boards && !this.#board_app) {
@@ -200,6 +204,9 @@ class KiCanvasEmbedElement extends KCUIElement {
                 controls="${this.controls}"
                 controlslist="${this.controlslist}">
             </kc-board-app>` as KCBoardAppElement;
+            if (this.theme) {
+                this.#board_app.setAttribute("theme", this.theme);
+            }
         }
 
         const focus_overlay =

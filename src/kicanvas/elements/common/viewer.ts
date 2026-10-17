@@ -44,6 +44,14 @@ export abstract class KCViewerElement<
                 this.viewer.addEventListener(KiCanvasLoadEvent.type, () => {
                     this.loaded = true;
                     this.dispatchEvent(new KiCanvasLoadEvent());
+                    // CopperChat: bubbling, composed load signal for hosts
+                    // (fires on every page load, e.g. after a sheet switch).
+                    this.dispatchEvent(
+                        new CustomEvent("kicanvas:viewerload", {
+                            bubbles: true,
+                            composed: true,
+                        }),
+                    );
                 }),
             );
 

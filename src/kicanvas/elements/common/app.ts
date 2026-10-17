@@ -65,6 +65,10 @@ export abstract class KCViewerAppElement<
     @attribute({ type: Boolean })
     sidebarcollapsed: boolean;
 
+    /** CopperChat: theme name forwarded from <kicanvas-embed theme=...>. */
+    @attribute({ type: String })
+    theme: string | null;
+
     override connectedCallback() {
         this.hidden = true;
         (async () => {
@@ -198,6 +202,9 @@ export abstract class KCViewerAppElement<
         );
 
         this.#viewer_elm = this.make_viewer_element();
+        if (this.theme) {
+            this.#viewer_elm.setAttribute("theme", this.theme);
+        }
         this.#viewer_elm.disableinteraction = controls == "none";
 
         let resizer = null;
@@ -250,7 +257,11 @@ export abstract class KCViewerAppElement<
         </kc-ui-floating-toolbar>`;
 
         let bottom_toolbar = null;
-        if (controls != "none") {
+        // CopperChat: "nobottomtoolbar" lets the host provide its own zoom controls.
+        if (
+            controls != "none" &&
+            !(this.controlslist ?? "").includes("nobottomtoolbar")
+        ) {
             bottom_toolbar = html`<kc-viewer-bottom-toolbar></kc-viewer-bottom-toolbar>`;
         }
 

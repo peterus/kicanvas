@@ -76,7 +76,11 @@ export abstract class KCViewerElement<
 
     async load(src: ProjectPage) {
         this.loaded = false;
-        await this.viewer.load(src.document);
+        // Schematic viewers get the page, not its document, so
+        // that symbol references follow the sheet instance (a sheet file
+        // placed twice has different references per instance) and switching
+        // between two instances of the same file re-renders.
+        await this.viewer.load(src.type === "schematic" ? src : src.document);
     }
 
     override render() {

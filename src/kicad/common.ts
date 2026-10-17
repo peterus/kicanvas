@@ -7,6 +7,7 @@
 import { Color } from "../base/color";
 import { Vec2 } from "../base/math";
 import { P, T, parse_expr, log, type Parseable } from "./parser";
+import type { List } from "./tokenizer";
 
 export function unescape_string(str: string): string {
     const escape_vars = {
@@ -462,6 +463,11 @@ export class Net {
                 P.positional("name", T.string),
             ),
         );
+        // CopperChat: KiCad 11 writes nets by name only: (net "GND").
+        const first = (expr as List)[1];
+        if (this.number === undefined && typeof first === "string") {
+            this.name = first;
+        }
     }
 }
 
@@ -475,10 +481,11 @@ export function isNetInfo(obj: any): obj is HasNetInfo {
     return "net" in obj && obj.__lookupGetter__("netname") !== undefined;
 }
 
-export function getNetNumber(item: HasNetInfo): number {
+export function getNetNumber(item: HasNetInfo): number | undefined {
     if (typeof item.net === "number") {
         return item.net;
     } else {
-        return item.net.number;
+        // CopperChat: pads without a net have no Net object.
+        return item.net?.number;
     }
 }

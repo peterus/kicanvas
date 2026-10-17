@@ -23,6 +23,14 @@ import {
 import { P, T, parse_expr, type Parseable } from "./parser";
 import type { List } from "./tokenizer";
 
+/**
+ * CopperChat: KiCad 11 (format 20260901) writes `(net "GND")` instead of
+ * `(net 3)`. Keep the name; KicadPCB numbers named nets after parsing.
+ */
+function net_ref(obj: unknown, name: string, e: unknown): any {
+    return typeof e === "number" || typeof e === "string" ? e : undefined;
+}
+
 export type Drawing =
     | GrLine
     | GrCircle
@@ -109,6 +117,54 @@ export class KicadPCB {
 
         // sort the array by net_number
         this.nets.sort((a, b) => a.number - b.number);
+
+        this.#number_named_nets();
+    }
+
+    /**
+     * CopperChat: KiCad 11 drops the board's `(net N "name")` table and
+     * references nets by name. Number them (0 = no net) so that netname
+     * lookups and net highlighting keep working.
+     */
+    #number_named_nets() {
+        if (this.nets.length > 0) {
+            return;
+        }
+        const numbers = new Map<string, number>([["", 0]]);
+        const number_of = (name: string) => {
+            let n = numbers.get(name);
+            if (n === undefined) {
+                n = numbers.size;
+                numbers.set(name, n);
+            }
+            return n;
+        };
+        const items: { net: number | string }[] = [
+            ...this.segments,
+            ...this.vias,
+            ...this.zones,
+            ...this.footprints.flatMap((f) => f.zones ?? []),
+        ];
+        for (const item of items) {
+            if (typeof item.net === "string") {
+                item.net = number_of(item.net);
+            }
+        }
+        for (const fp of this.footprints) {
+            for (const pad of fp.pads) {
+                if (pad.net && pad.net.number === undefined) {
+                    pad.net.number = number_of(pad.net.name ?? "");
+                }
+            }
+        }
+        if (numbers.size > 1) {
+            this.nets = [...numbers].map(([name, number]) =>
+                Object.assign(Object.create(Net.prototype) as Net, {
+                    number,
+                    name,
+                }),
+            );
+        }
     }
 
     *items() {
@@ -205,7 +261,7 @@ export class LineSegment implements HasUniqueID, HasNetInfo {
                 P.vec2("end"),
                 P.pair("width", T.number),
                 P.pair("layer", T.string),
-                P.pair("net", T.number),
+                P.pair("net", net_ref),
                 P.atom("locked"),
                 P.pair("uuid", T.string),
                 P.pair("tstamp", T.string),
@@ -257,7 +313,7 @@ export class ArcSegment implements HasUniqueID, HasNetInfo {
                 P.vec2("end"),
                 P.pair("width", T.number),
                 P.pair("layer", T.string),
-                P.pair("net", T.number),
+                P.pair("net", net_ref),
                 P.atom("locked"),
                 P.pair("tstamp", T.string),
                 P.pair("uuid", T.string),
@@ -302,7 +358,7 @@ export class Via implements HasUniqueID, HasNetInfo {
                 P.pair("size", T.number),
                 P.pair("drill", T.number),
                 P.list("layers", T.string),
-                P.pair("net", T.number),
+                P.pair("net", net_ref),
                 P.atom("locked"),
                 P.atom("free"),
                 P.atom("remove_unused_layers"),
@@ -354,7 +410,7 @@ export class Zone implements HasUniqueID {
                 expr,
                 P.start("zone"),
                 P.atom("locked"),
-                P.pair("net", T.number),
+                P.pair("net", net_ref),
                 P.pair("net_name", T.string),
                 P.pair("net_name", T.string),
                 P.pair("name", T.string),

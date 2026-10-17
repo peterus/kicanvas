@@ -85,6 +85,17 @@ export class Viewport {
     }
 
     /**
+     * Zoom by `factor` about a screen point (default: the centre),
+     * within the pan-and-zoom limits. Used by host zoom buttons.
+     */
+    zoom_about(factor: number, screen?: Vec2) {
+        const at = screen ?? new Vec2(this.width / 2, this.height / 2);
+        if (this.#pan_and_zoom) {
+            this.#pan_and_zoom.zoom_about(factor, at);
+        }
+    }
+
+    /**
      * The matrix representing this viewport. This can be passed into rendering
      * methods to display things at the right spot.
      */

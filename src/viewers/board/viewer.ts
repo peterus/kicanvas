@@ -87,7 +87,13 @@ export class BoardViewer extends DocumentViewer<
         if (item instanceof board_items.Footprint) {
             this.select(item);
         } else if (kicad_common.isNetInfo(item)) {
-            this.highlight_net(kicad_common.getNetNumber(item));
+            // Items without a net have nothing to highlight.
+            const net = kicad_common.getNetNumber(item);
+            if (net === undefined || !Number.isFinite(net)) {
+                this.select(null);
+                return;
+            }
+            this.highlight_net(net);
         }
     }
 

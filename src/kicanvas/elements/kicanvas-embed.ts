@@ -71,6 +71,11 @@ class KiCanvasEmbedElement extends KCUIElement {
 
     #project: Project = new Project();
 
+    /** CopperChat: expose the loaded project (pages, active sheet) to hosts. */
+    get project(): Project {
+        return this.#project;
+    }
+
     @attribute({ type: String })
     src: string | null;
 

@@ -89,13 +89,17 @@ export class SchematicViewer extends DocumentViewer<
 
     override async load(src: KicadSch | ProjectPage) {
         // CopperChat: highlights are in the previous page's coordinates; the
-        // host re-applies them after kicanvas:viewerload.
-        this.#highlights = [];
-
+        // host re-applies them after kicanvas:viewerload. Only cleared when
+        // the document really changes (the base returns early otherwise and
+        // fires no load event, so the host would not re-apply them).
         if (src instanceof KicadSch) {
+            if (src !== this.document) {
+                this.#highlights = [];
+            }
             return await super.load(src);
         }
 
+        this.#highlights = [];
         this.document = null!;
 
         const doc = src.document as KicadSch;
@@ -194,8 +198,29 @@ export class SchematicViewer extends DocumentViewer<
     }
 
     public clear_highlight() {
+        if (!this.#highlights.length) {
+            return;
+        }
         this.#highlights = [];
         this.paint_highlight();
+    }
+
+    #draw_queued = false;
+
+    /**
+     * CopperChat: coalesces redraws into one animation frame (a host applying
+     * a highlight calls clear + several highlight calls + zoom in a row).
+     */
+    public override draw(): void {
+        if (!this.viewport || this.#draw_queued) {
+            return;
+        }
+        this.#draw_queued = true;
+        window.requestAnimationFrame(() => {
+            this.#draw_queued = false;
+            this.grid?.update();
+            this.on_draw();
+        });
     }
 
     /** Fits the camera to all highlights (no-op without highlights). */

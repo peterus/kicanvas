@@ -198,6 +198,18 @@ export class SchematicViewer extends DocumentViewer<
         this.paint_highlight();
     }
 
+    /** Fits the camera to all highlights (no-op without highlights). */
+    public zoom_to_highlight() {
+        if (!this.#highlights.length) {
+            return;
+        }
+        const bb = BBox.combine(this.#highlights.map((h) => h.bbox));
+        this.viewport.camera.bbox = bb.grow(
+            Math.max(10, bb.w * 0.15, bb.h * 0.15),
+        );
+        this.draw();
+    }
+
     public get highlighted_count() {
         return this.#highlights.length;
     }

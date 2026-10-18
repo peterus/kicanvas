@@ -36,7 +36,7 @@ topic branches.
 | feat(embed): do not load the Google Fonts stylesheet at runtime | CopperChat is self-hosted/offline and provides the fonts; upstream relies on the hosted fonts. |
 | feat(embed): host integration hooks (viewerload, live theme, no bottom toolbar) | `kicanvas:viewerload`, live theme forwarding and `controlslist="nobottomtoolbar"` exist for CopperChat's own chrome. |
 | feat(board): a tap on a part selects the part | Changes upstream's selection policy (footprints win over nets) for phone `@REF` picking. |
-| feat(schematic): highlight overlay for a set of items | `highlight(targets, kind)`, `highlight_boxes(boxes)`, `clear_highlight()`, `highlighted_count`: CopperChat's change view outlines changed items (added green / modified orange / removed red / focus) on an own layer below the selection, theme-aware, reset on every `load()`. |
+| feat(schematic): highlight overlay for a set of items | `highlight(targets, kind)`, `highlight_boxes(boxes)`, `clear_highlight()`, `zoom_to_highlight()`, `highlighted_count`: CopperChat's change view outlines changed items (added green / modified orange / removed red / focus) on an own layer below the selection, theme-aware, reset on every `load()`. |
 
 ## Updating
 

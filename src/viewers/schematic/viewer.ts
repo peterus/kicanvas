@@ -168,7 +168,8 @@ export class SchematicViewer extends DocumentViewer<
                 missing.push(name);
             }
         }
-        this.paint_highlight();
+        this.#highlight_dirty = true;
+        this.draw();
         return { found, missing };
     }
 
@@ -193,7 +194,8 @@ export class SchematicViewer extends DocumentViewer<
             });
             added++;
         }
-        this.paint_highlight();
+        this.#highlight_dirty = true;
+        this.draw();
         return added;
     }
 
@@ -202,10 +204,13 @@ export class SchematicViewer extends DocumentViewer<
             return;
         }
         this.#highlights = [];
-        this.paint_highlight();
+        this.#highlight_dirty = true;
+        this.draw();
     }
 
     #draw_queued = false;
+    /** The highlight layer is rebuilt once, in the next frame, after a batch of calls. */
+    #highlight_dirty = false;
 
     /**
      * CopperChat: coalesces redraws into one animation frame (a host applying
@@ -218,6 +223,9 @@ export class SchematicViewer extends DocumentViewer<
         this.#draw_queued = true;
         window.requestAnimationFrame(() => {
             this.#draw_queued = false;
+            if (this.#highlight_dirty) {
+                this.paint_highlight(false);
+            }
             this.grid?.update();
             this.on_draw();
         });
@@ -256,6 +264,7 @@ export class SchematicViewer extends DocumentViewer<
     }
 
     protected paint_highlight(draw = true) {
+        this.#highlight_dirty = false;
         const layer = this.layers?.highlight_layer;
         if (!layer) {
             return;

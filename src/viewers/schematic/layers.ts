@@ -59,6 +59,32 @@ export class LayerSet extends BaseLayerSet {
             (this.theme["worksheet"] as Color) ?? Color.white;
     }
 
+    /**
+     * CopperChat: host highlights (changed items). Its own layer, drawn just below the
+     * selection overlay, so a selection never wipes the highlight and vice versa.
+     */
+    public readonly highlight_layer: ViewLayer = new ViewLayer(
+        this,
+        ":CopperChat:Highlight",
+        true,
+        false,
+        Color.white,
+    );
+
+    override *in_display_order(): Generator<ViewLayer, void, unknown> {
+        for (const layer of super.in_display_order()) {
+            if (layer === this.overlay) {
+                yield this.highlight_layer;
+            }
+            yield layer;
+        }
+    }
+
+    override dispose() {
+        this.highlight_layer.dispose();
+        super.dispose();
+    }
+
     override *interactive_layers(): Generator<ViewLayer, void, unknown> {
         // Only the top interactive layer is clickable for schematics
         yield this.by_name(LayerNames.interactive)!;
